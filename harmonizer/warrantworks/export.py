@@ -885,8 +885,9 @@ def verify(filename: str, data: bytes, final: list[dict], required: list[dict], 
                                 if not sq.startswith(joined):
                                     break
                     # the reader merged this line with a neighbour on the same
-                    # baseline: the line must sit inside it, starting where it did
-                    elif sq and len(sq) >= 4 and tb.x0 < bb.x0 - 2.5 and tb.x1 >= bb.x1 - 2.5 and sq in squash(tt):
+                    # baseline: the line's start must fall inside the merged
+                    # line (OCR right edges are too loose to compare)
+                    elif sq and len(sq) >= 4 and tb.x0 < bb.x0 - 2.5 and bb.x0 < tb.x1 and sq in squash(tt):
                         hit = True
                     if hit:
                         break
