@@ -858,15 +858,39 @@ def verify(filename: str, data: bytes, final: list[dict], required: list[dict], 
             by_page: dict[int, list[dict]] = {}
             for s in reread.segments:
                 by_page.setdefault(s["loc"].get("page", 0), []).append(s)
+            def _cy(r: pymupdf.Rect) -> float:
+                return (r.y0 + r.y1) / 2
+
             for i in kept_unchanged:
                 s = base_segments[i]
                 bb = pymupdf.Rect(s["loc"]["bbox"])
-                for t in by_page.get(s["loc"]["page"], []):
-                    tb = pymupdf.Rect(t["loc"]["bbox"])
-                    cy_t, cy_b = (tb.y0 + tb.y1) / 2, (bb.y0 + bb.y1) / 2
-                    if abs(tb.x0 - bb.x0) <= 2.5 and abs(cy_t - cy_b) <= 4 and same_wording(t["text"], s["text"], ocr=True):
-                        in_place += 1
+                sq = squash(s["text"])
+                row = sorted(((pymupdf.Rect(t["loc"]["bbox"]), t["text"]) for t in by_page.get(s["loc"]["page"], [])
+                              if abs(_cy(pymupdf.Rect(t["loc"]["bbox"])) - _cy(bb)) <= 4), key=lambda z: z[0].x0)
+                hit = False
+                for k, (tb, tt) in enumerate(row):
+                    # same line read back at the same start position
+                    if abs(tb.x0 - bb.x0) <= 2.5:
+                        if same_wording(tt, s["text"], ocr=True):
+                            hit = True
+                        elif sq:
+                            # the reader split this line at a gap: rejoin the
+                            # pieces that follow on the same baseline
+                            joined = ""
+                            for tb2, tt2 in row[k:]:
+                                joined += squash(tt2)
+                                if joined.startswith(sq) or same_wording(joined, sq, ocr=True):
+                                    hit = True
+                                    break
+                                if not sq.startswith(joined):
+                                    break
+                    # the reader merged this line with a neighbour on the same
+                    # baseline: the line must sit inside it, starting where it did
+                    elif sq and len(sq) >= 4 and tb.x0 < bb.x0 - 2.5 and tb.x1 >= bb.x1 - 2.5 and sq in squash(tt):
+                        hit = True
+                    if hit:
                         break
+                in_place += hit
             base_paths = sum(len(p.get_drawings()) for p in bd)
             out_paths = sum(len(p.get_drawings()) for p in d)
             res["layout"] = {
