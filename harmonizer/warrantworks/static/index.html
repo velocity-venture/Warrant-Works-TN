@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WarrantWorks TN</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" onclick="location.hash=''">
+    <div class="seal" aria-hidden="true">WW</div>
+    <div>
+      <div class="brand-name">WarrantWorks TN</div>
+      <div class="brand-sub">Uniform. Compliant. Familiar.</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge local" title="Runs on this computer only. Nothing is sent over the network.">Local only</span>
+    <label class="actor">Clerk name
+      <input id="actor" placeholder="Your name (recorded with each action)" autocomplete="name">
+    </label>
+  </div>
+</header>
+<div class="notice">Document harmonization for court forms. It compares versions of a form and records human decisions; it does not evaluate cases, and recovered AOC forms are historical until verified against current official sources. Use blank or synthetic forms in this local build.</div>
+<main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <button class="modal-close" aria-label="Close" onclick="closeModal()">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
